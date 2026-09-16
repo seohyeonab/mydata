@@ -17,6 +17,7 @@ st.title("영화 데이터 그래프 도감 2 - 분포와 관계")
 # --------------------------------------------------
 DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
 
+
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_URL)
@@ -28,7 +29,7 @@ def load_data():
         errors="coerce"
     )
 
-    # 여러 장르가 "|"로 적혀 있는 경우 첫 번째 장르만 사용
+    # 여러 장르가 "|"로 적혀 있으면 첫 번째 장르만 사용
     df["genre"] = (
         df["genre"]
         .fillna("기타")
@@ -55,10 +56,8 @@ def load_data():
 
 df = load_data()
 
-# --------------------------------------------------
-# 데이터 확인
-# --------------------------------------------------
 st.caption(f"분석 대상 영화: {len(df):,}편")
+
 
 # ==================================================
 # 그래프 1. 장르별 영화 편수
@@ -104,10 +103,63 @@ st.plotly_chart(
 )
 
 st.markdown("### 이 그래프로 알 수 있는 것")
+
 st.text_area(
     "이 그래프로 알 수 있는 것",
     value="",
     placeholder="여기에 이 그래프를 통해 알 수 있는 내용을 한 문장으로 작성하세요.",
     height=80,
     key="graph1_explanation"
+)
+
+
+# ==================================================
+# 그래프 2. 장르별 영화 관객 트리맵
+# ==================================================
+st.divider()
+
+st.header("그래프 2. 장르별 영화 관객 트리맵")
+
+# 영화명이나 장르가 비어 있는 행 제거
+treemap_df = df[
+    df["genre"].notna()
+    & df["movieNm"].notna()
+    & df["total_audi"].notna()
+].copy()
+
+# 총 관객이 0보다 큰 영화만 사용
+treemap_df = treemap_df[treemap_df["total_audi"] > 0]
+
+fig2 = px.treemap(
+    treemap_df,
+    path=["genre", "movieNm"],
+    values="total_audi",
+    title="장르별 영화의 총 관객 규모",
+)
+
+fig2.update_traces(
+    hovertemplate=(
+        "<b>%{label}</b><br>"
+        "총 관객: %{value:,}명"
+        "<extra></extra>"
+    )
+)
+
+fig2.update_layout(
+    margin=dict(t=60, b=20, l=20, r=20)
+)
+
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
+
+st.markdown("### 이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "이 그래프로 알 수 있는 것",
+    value="",
+    placeholder="여기에 이 그래프를 통해 알 수 있는 내용을 한 문장으로 작성하세요.",
+    height=80,
+    key="graph2_explanation"
 )
